@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35013.160
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{36B51150-B5BA-4438-8C07-29BAE2B8C56A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C3E210AE-71AF-4CDC-A3CA-90289C2E18AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "webblog.backend.IdentityApi", "src\webblog.backend.IdentityApi\webblog.backend.IdentityApi.csproj", "{3EE494FF-3335-49B7-AF38-90AF1CC5B0C8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3EE494FF-3335-49B7-AF38-90AF1CC5B0C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3EE494FF-3335-49B7-AF38-90AF1CC5B0C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3EE494FF-3335-49B7-AF38-90AF1CC5B0C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3EE494FF-3335-49B7-AF38-90AF1CC5B0C8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3EE494FF-3335-49B7-AF38-90AF1CC5B0C8} = {36B51150-B5BA-4438-8C07-29BAE2B8C56A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E782D291-575B-406A-A087-D438A16E01B6}
+	EndGlobalSection
+EndGlobal
