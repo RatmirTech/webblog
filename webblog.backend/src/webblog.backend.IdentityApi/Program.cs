@@ -1,19 +1,16 @@
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;
+using webblog.backend.IdentityApi.Abstractions;
 using webblog.backend.IdentityApi.Data;
 using webblog.backend.IdentityApi.Models;
+using webblog.backend.IdentityApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 builder.Services.AddControllers();
-
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -23,45 +20,16 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Title = "WebBlog Identity API"
     });
-    var securityScheme = new OpenApiSecurityScheme()
-    {
-        Description = "JWT Authorization header используется Bearer схема. Пример: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT"
-    };
-
-    var securityRequirement = new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "bearerAuth"
-                    }
-            },
-            new string[] {}
-        }
-    };
-    options.AddSecurityDefinition("bearerAuth", securityScheme);
-    options.AddSecurityRequirement(securityRequirement);
 });
 
 builder.Services.AddConnections(builder.Configuration["DbNpgsql"]);
 
-#region[Guard key]
 var environment = builder.Services.BuildServiceProvider()
     .GetRequiredService<IWebHostEnvironment>();
 builder.Services.AddDataProtection()
-                    .SetApplicationName($"webblog-{environment.EnvironmentName}")
-                    .PersistKeysToFileSystem(new DirectoryInfo($@"{environment.ContentRootPath}\keys"));
-#endregion
+                .SetApplicationName($"webblog-{environment.EnvironmentName}")
+                .PersistKeysToFileSystem(new DirectoryInfo($@"{environment.ContentRootPath}\keys"));
 
-#region[Identity]
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {
     options.User.RequireUniqueEmail = true;
@@ -73,34 +41,22 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
     options.Password.RequireNonAlphanumeric = false;
 
     options.User.AllowedUserNameCharacters =
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_@+";
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_@+";
 })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders()
     .AddRoleManager<RoleManager<ApplicationRole>>();
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer("Bearer", options =>
-{
-    options.SaveToken = true;
-    options.RequireHttpsMetadata = false;
-    options.TokenValidationParameters = new TokenValidationParameters()
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidAudience = builder.Configuration["JWT:ValidAudience"],
-        ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"] ?? "testtool"))
-    };
-});
-#endregion
+        options.LoginPath = "/api/account/login";
+        options.LogoutPath = "/api/account/logout";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.SlidingExpiration = true;
+    });
 
-#region[Cors]
 string corsPolicy = "main_origins";
 var origins = builder.Configuration.GetSection("Origins").Get<string[]>();
 builder.Services.AddCors(o => o.AddPolicy(corsPolicy, builder =>
@@ -110,9 +66,10 @@ builder.Services.AddCors(o => o.AddPolicy(corsPolicy, builder =>
     .AllowAnyMethod()
     .AllowAnyHeader()
     .AllowCredentials()
-    .WithOrigins(origins ?? ["localhost"]);
+    .WithOrigins(origins ?? new[] { "localhost" });
 }));
-#endregion
+
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 builder.Services.AddHealthChecks();
 
@@ -125,9 +82,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseAuthentication();
-
 app.UseCors(corsPolicy);
-
 
 if (app.Environment.IsDevelopment())
 {
